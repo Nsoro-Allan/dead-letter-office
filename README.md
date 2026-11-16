@@ -1,3 +1,7 @@
+<div align="left">
+  <img src="Assets/favicon.png" alt="Dead Letter Office" width="60" height="60">
+</div>
+
 # Dead Letter Office
 
 A haunted mail room that teaches you to spot scams. Letters arrive after midnight; you sweep a UV lamp over each one, mark the clues that glow, then **Deliver** the letter or **Burn** it. The spooky interface is the teaching mechanic: clues only reveal under the lamp, which trains the habit of inspecting a message before trusting it.
