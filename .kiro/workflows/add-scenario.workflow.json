@@ -1,0 +1,19 @@
+{
+  "name": "add-scenario",
+  "description": "Draft, add and validate a new letter for Dead Letter Office",
+  "inputs": { "idea": "prompt" },
+  "steps": [
+    {
+      "type": "step",
+      "id": "draft",
+      "agent": "scenario-author",
+      "prompt": "Draft one new letter for: {{idea}}. Read core.js first so the tone, markup and fields match the existing scenarios. Output the object only. Do not edit files yet."
+    },
+    {
+      "type": "step",
+      "id": "add",
+      "agent": "wf-coder",
+      "prompt": "Append this scenario to SCENARIOS in core.js, keeping the file's formatting, then run `node tests/test.js` and fix any failure:\n\n{{previous.output}}"
+    }
+  ]
+}

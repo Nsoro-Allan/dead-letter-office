@@ -1,40 +1,25 @@
 {
-  "name": "Add New Feature",
-  "description": "Workflow for adding a new feature or section to the portfolio",
-  "version": "1.0",
-  "inputs": {
-    "feature_name": {
-      "type": "string",
-      "description": "Name of the feature to add (e.g., 'Blog Section', 'Testimonials')",
-      "required": true
-    },
-    "feature_description": {
-      "type": "string",
-      "description": "Detailed description of what the feature should do",
-      "required": true
-    }
-  },
+  "name": "add-feature",
+  "description": "Plan, build and verify a new feature in Dead Letter Office",
+  "inputs": { "feature_name": "string", "feature_description": "prompt" },
   "steps": [
     {
+      "type": "step",
       "id": "investigate",
-      "type": "step",
-      "agent": "wf-coder",
-      "prompt": "Investigate the current project structure for the Haunted Portfolio at /run/media/nsoroallan/Content/Programming/Kiroween/haunted-portfolio.\n\nFeature to add: {{feature_name}}\nDescription: {{feature_description}}\n\nTasks:\n1. Review the existing component structure in components/sections/\n2. Check lib/data.tsx for data structure patterns\n3. Review the design patterns in existing sections\n4. Identify where new files need to be created\n5. Plan the implementation approach\n\nProvide a clear plan for implementing this feature that matches the existing design system and code patterns.",
-      "artifacts": ["investigation_report.md"]
+      "agent": "wf-planner",
+      "prompt": "Read-only. Investigate where '{{feature_name}}' fits in this project: {{feature_description}}\n\nReview core.js, app.js, index.html and .kiro/steering/*.md. List the files to change, the requirement to add to .kiro/specs/dead-letter-office/requirements.md, and any tests needed. Do not edit files."
     },
     {
+      "type": "step",
       "id": "implement",
-      "type": "step",
       "agent": "wf-coder",
-      "prompt": "Based on the investigation ({{investigate.output}}), implement the new feature: {{feature_name}}\n\nRequirements:\n1. Follow existing component patterns (see .kiro/steering/component-patterns.md)\n2. Match the design system (dark theme, lavender/crimson accents)\n3. Use Framer Motion for animations\n4. Make it responsive (mobile-first)\n5. Add the feature to app/page.tsx\n6. Update navigation if needed\n7. Add sample data to lib/data.tsx if required\n\nEnsure the code is clean, well-typed, and follows existing conventions.",
-      "artifacts": ["implementation_summary.md"]
+      "prompt": "Implement '{{feature_name}}' from this plan:\n\n{{previous.output}}\n\nFollow the steering files. Keep Lights on keyboard access and reduced motion working. Add the requirement to the spec and tick or add the task."
     },
     {
-      "id": "test",
       "type": "step",
+      "id": "verify",
       "agent": "wf-coder",
-      "prompt": "Test the implementation:\n\n1. Run 'npm run build' to check for TypeScript errors\n2. Verify the component renders correctly\n3. Check responsive behavior (mobile, tablet, desktop)\n4. Ensure animations work smoothly\n5. Verify it matches the design system\n\nFix any issues found and report the final status.",
-      "artifacts": ["test_report.md"]
+      "prompt": "Run `node tests/test.js` and `node --check app.js`. Fix any failure and report the final status in two sentences."
     }
   ]
 }
