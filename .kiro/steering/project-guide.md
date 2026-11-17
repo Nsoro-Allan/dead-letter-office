@@ -8,17 +8,18 @@ Vanilla HTML, CSS and JavaScript. No framework, no bundler, no dependencies. Nod
 
 ## File map
 - `core.js`: scenarios, markup parser, validator, scoring, ranking. Pure logic; runs in the browser and in Node.
+- `engine.js`: seeded letter generator, rule-based analyzer (also powers the inspector), adaptive deck builder.
 - `app.js`: screens, lamp proximity, marking, verdicts, candles, whispers, sound, badges, share text.
 - `index.html`: layout and all styles (atmosphere, paper, stamps, candles).
-- `tests/test.js`: scenario validation plus randomised property tests on scoring.
+- `tests/test.js` and `tests/engine.test.js`: scenario validation, scoring properties, generator and analyzer properties. Run both with `npm test`.
 - `.kiro/`: steering, hooks, workflows, a custom agent and specs for this project.
 
 ## Commands
-- `node tests/test.js` must pass before any change is considered done.
+- `npm test` must pass before any change is considered done.
 - `python3 -m http.server 8000` to preview.
 
 ## Rules of the codebase
-1. Scenario text lives only in `core.js` and uses `{{text||why}}` for red flags and `((text||why))` for decoys. See code-patterns.
+1. Hand-written scenario text lives in `core.js`; generated text comes from the pools in `engine.js` and uses `{{text||why}}` for red flags and `((text||why))` for decoys. See code-patterns.
 2. Every piece of scenario text reaches the DOM through `esc()`. Never insert it raw.
 3. Scoring changes need a matching property test.
 4. Nothing may make a network request. Storage access is wrapped in try/catch.

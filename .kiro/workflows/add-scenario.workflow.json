@@ -1,19 +1,24 @@
 {
   "name": "add-scenario",
   "description": "Draft, add and validate a new letter for Dead Letter Office",
-  "inputs": { "idea": "prompt" },
+  "inputs": {
+    "idea": {
+      "type": "string",
+      "description": "Brief description of the letter to create (e.g., 'fake delivery fee SMS' or 'genuine password reset email')"
+    }
+  },
   "steps": [
     {
       "type": "step",
       "id": "draft",
       "agent": "scenario-author",
-      "prompt": "Draft one new letter for: {{idea}}. Read core.js first so the tone, markup and fields match the existing scenarios. Output the object only. Do not edit files yet."
+      "prompt": "Draft one new letter for Dead Letter Office based on: {{idea}}\n\nRead /run/media/nsoroallan/Content/Programming/dead-letter-office/core.js first so the tone, markup and fields match the existing scenarios. Follow the clue markup patterns exactly: {{text||why||category}} for red flags, ((text||why)) for decoys. Output the complete scenario object. Do not edit files yet."
     },
     {
       "type": "step",
       "id": "add",
       "agent": "wf-coder",
-      "prompt": "Append this scenario to SCENARIOS in core.js, keeping the file's formatting, then run `node tests/test.js` and fix any failure:\n\n{{previous.output}}"
+      "prompt": "Append this scenario to the SCENARIOS array in /run/media/nsoroallan/Content/Programming/dead-letter-office/core.js, maintaining the file's formatting:\n\n{{previous.output}}\n\nThen run `npm test` from /run/media/nsoroallan/Content/Programming/dead-letter-office and fix any validation failures."
     }
   ]
 }

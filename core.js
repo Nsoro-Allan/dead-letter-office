@@ -1,6 +1,6 @@
 (function (g) {
-  // Markup: {{text||why}} = real red flag, ((text||why)) = decoy (looks odd, is fine)
-  const R = /(\{\{|\(\()(.+?)\|\|(.+?)(\}\}|\)\))/g;
+  // Markup: {{text||why||category}} = real red flag (category optional), ((text||why)) = decoy (looks odd, is fine)
+  const R = /(\{\{|\(\()(.+?)\|\|(.+?)(?:\|\|(\w+))?(\}\}|\)\))/g;
   const FIELDS = ["from", "url", "subj", "body"];
   const S = [
     {
@@ -119,7 +119,7 @@
       m;
     while ((m = re.exec(s))) {
       if (m.index > i) out.push({ t: "text", text: s.slice(i, m.index) });
-      out.push({ t: m[1] === "{{" ? "tell" : "decoy", text: m[2], why: m[3] });
+      out.push({ t: m[1] === "{{" ? "tell" : "decoy", text: m[2], why: m[3], cat: m[4] });
       i = re.lastIndex;
     }
     if (i < s.length) out.push({ t: "text", text: s.slice(i) });

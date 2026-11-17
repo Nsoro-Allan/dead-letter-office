@@ -597,3 +597,10 @@ li.tell:not(.on) b {
     display: none;
   }
 }
+
+textarea{width:100%;margin:6px 0 10px;padding:12px 14px;font:inherit;color:var(--ink);background:#120d1a;border:1px solid #3a2e55;border-radius:6px;resize:vertical}
+textarea:focus-visible,select:focus-visible{outline:2px solid var(--uv);outline-offset:2px}
+select{font:inherit;color:var(--ink);background:#120d1a;border:1px solid #3a2e55;border-radius:6px;padding:4px 8px}
+.skills{list-style:none;padding:0}.skills li{display:grid;grid-template-columns:1fr 120px 44px;gap:10px;align-items:center}
+.meter{height:8px;border-radius:4px;background:#241c38;overflow:hidden}.meter i{display:block;height:100%;background:var(--amber)}
+.skills b{text-align:right;font-weight:normal;color:var(--dim)}

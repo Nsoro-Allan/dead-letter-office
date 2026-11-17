@@ -3,18 +3,30 @@
   "hooks": [
     {
       "name": "Run tests when logic changes",
-      "description": "Validates every scenario and runs the scoring property tests whenever core.js or the tests change",
-      "enabled": true,
-      "when": { "type": "fileEdited", "patterns": ["(^|/)core\\.js$", "(^|/)tests/test\\.js$"] },
-      "then": { "type": "command", "command": "node tests/test.js" },
-      "timeout": 30
+      "trigger": "PostFileSave",
+      "matcher": "(core|engine)\\.js$",
+      "action": {
+        "type": "command",
+        "command": "npm test"
+      }
+    },
+    {
+      "name": "Run tests when test files change",
+      "trigger": "PostFileSave",
+      "matcher": "tests/.*\\.js$",
+      "action": {
+        "type": "command",
+        "command": "npm test"
+      }
     },
     {
       "name": "Accessibility review on UI edits",
-      "description": "Asks the agent to check keyboard, Lights on mode and reduced motion after UI changes (read-only, so it cannot retrigger itself)",
-      "enabled": true,
-      "when": { "type": "fileEdited", "patterns": ["(^|/)(app\\.js|index\\.html)$"] },
-      "then": { "type": "askAgent", "prompt": "app.js or index.html changed. Without editing any files, check that every clue is still reachable by keyboard in Lights on mode, that aria-pressed and the aria-live region still work, and that animations stop under prefers-reduced-motion. Report problems only." }
+      "trigger": "PostFileSave",
+      "matcher": "(app\\.js|index\\.html)$",
+      "action": {
+        "type": "agent",
+        "prompt": "Without editing files, check that every clue is still keyboard-focusable in Lights on mode, that aria-pressed and the aria-live region still work, and that fog, bats, flicker, shake and the scare face stop under prefers-reduced-motion. Report problems only."
+      }
     }
   ]
 }

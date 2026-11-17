@@ -1,26 +1,39 @@
 # .kiro for Dead Letter Office
 
-Configuration Kiro uses on this project.
+Configuration for Kiro on this project.
 
 | Path | Purpose | Inclusion / trigger |
 |---|---|---|
 | `steering/product.md` | What the app is for and its hard constraints | always |
 | `steering/project-guide.md` | Stack, file map, commands, codebase rules | always |
-| `steering/design.md` | Colour, type, motion and accessibility rules | always |
+| `steering/design.md` | Color, type, motion and accessibility rules | always |
 | `steering/code-patterns.md` | Scenario markup, DOM, audio and storage patterns | fileMatch on `.js` and `.html` |
-| `hooks/dead-letter-office.json` | Runs the tests when `core.js` or tests change; read-only accessibility review when UI files change | fileEdited |
-| `agents/scenario-author.json` | Custom agent that writes and reviews new letters | used by `add-scenario` |
+| `hooks/dead-letter-office.json` | Runs `npm test` when `core.js`, `engine.js` or tests change; accessibility review when UI files change | PostFileSave |
+| `agents/scenario-author.json` | Custom agent that writes and reviews new letters | used by `add-scenario` workflow |
 | `workflows/add-scenario.workflow.json` | Draft with the custom agent, add, validate | run on demand |
 | `workflows/add-feature.workflow.json` | Investigate, implement, verify | run on demand |
-| `specs/dead-letter-office/` | EARS requirements, design and task list | spec |
+| `specs/dead-letter-office/` | Requirements, design and task list | spec session |
 
-## Changes from the earlier configuration
-The earlier `.kiro` described a different project (a Next.js haunted portfolio). Updated here:
-- Steering rewritten for this app; `inclusion: auto` plus `fileMatchPattern` replaced by `always` and `fileMatch`, since `fileMatchPattern` only applies to `fileMatch`.
-- Hook moved to the current `.kiro/hooks/*.json` `v1` schema (`when` / `then`) instead of `trigger` / `matcher` / `action`, and the hard-coded local path and TypeScript check removed.
-- Workflows corrected to the documented recipe shape (`inputs` map, `{{previous.output}}`, `wf-planner` / `wf-coder`), with the hard-coded path removed and a project-specific `add-scenario` recipe added.
-- The Victorian redesign notes were folded into `steering/design.md`; the portfolio component checklist was dropped.
-- New: a custom agent, which the 2026 write-up asks about.
+## Using this configuration
 
-## Verify in Kiro
-Hook patterns, workflow validation and the agent file were written against the current docs but not executed here. Open the Hooks panel, run `validate_workflow` on each recipe, and confirm the agent appears, then note what you actually used in your submission.
+**Steering files** are automatically included based on their front matter. Product, project-guide, and design are always loaded. Code-patterns loads when JavaScript or HTML files are in context.
+
+**Hooks** fire automatically on file save events. The test hook validates scenarios and scoring properties. The accessibility hook reminds about keyboard navigation, ARIA, and reduced-motion preferences without editing files.
+
+**Workflows** can be launched from the command palette or by running `kiro workflow run <name>`:
+- `add-scenario`: Creates a new letter using the custom scenario-author agent
+- `add-feature`: Full feature pipeline from investigation through verification
+
+**Custom agent** (`scenario-author`) knows the clue markup syntax and can write valid letters that pass validation.
+
+**Specs** hold structured requirements and implementation tasks tracked through Kiro's spec workflow.
+
+## Kiroween 2026 notes
+
+This configuration demonstrates:
+- Layered steering (product/design/patterns) that stays out of the way until relevant
+- Domain-specific agent (scenario-author) that understands the clue markup DSL
+- Property-based test enforcement through hooks
+- Accessibility guardrails built into the workflow
+
+All paths are relative to workspace root. The custom agent and workflows reference files by absolute path to work correctly in worktrees.

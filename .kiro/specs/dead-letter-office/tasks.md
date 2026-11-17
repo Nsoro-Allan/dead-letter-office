@@ -8,3 +8,6 @@
 - [x] Kiro config merged and corrected: steering, v1 hooks, workflows, custom agent
 - [ ] Record the 3 minute demo video
 - [ ] Write the Kiro usage write-up (use your real Kiro sessions)
+- [x] Engine: seeded generator, categories, difficulty, daily case, weak-spot weighting
+- [x] Real-message inspector (rule-based, on-device)
+- [x] Engine property tests (`npm test`)

@@ -1,0 +1,8 @@
+{
+  "name": "dead-letter-office",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A haunted mail room that teaches you to spot scams.",
+  "scripts": { "test": "node tests/test.js && node tests/engine.test.js" },
+  "license": "MIT"
+}

@@ -1,25 +1,34 @@
 {
   "name": "add-feature",
   "description": "Plan, build and verify a new feature in Dead Letter Office",
-  "inputs": { "feature_name": "string", "feature_description": "prompt" },
+  "inputs": {
+    "feature_name": {
+      "type": "string",
+      "description": "Short name for the feature"
+    },
+    "feature_description": {
+      "type": "string",
+      "description": "Detailed description of what the feature should do"
+    }
+  },
   "steps": [
     {
       "type": "step",
       "id": "investigate",
       "agent": "wf-planner",
-      "prompt": "Read-only. Investigate where '{{feature_name}}' fits in this project: {{feature_description}}\n\nReview core.js, app.js, index.html and .kiro/steering/*.md. List the files to change, the requirement to add to .kiro/specs/dead-letter-office/requirements.md, and any tests needed. Do not edit files."
+      "prompt": "Read-only investigation for '{{feature_name}}' feature in Dead Letter Office.\n\nFeature description: {{feature_description}}\n\nReview these files:\n- /run/media/nsoroallan/Content/Programming/dead-letter-office/core.js\n- /run/media/nsoroallan/Content/Programming/dead-letter-office/engine.js\n- /run/media/nsoroallan/Content/Programming/dead-letter-office/app.js\n- /run/media/nsoroallan/Content/Programming/dead-letter-office/index.html\n- /run/media/nsoroallan/Content/Programming/dead-letter-office/.kiro/steering/*.md\n\nOutput:\n1. Files that need changes\n2. New requirement text to add to .kiro/specs/dead-letter-office/requirements.md\n3. Implementation approach that maintains Lights on keyboard access and reduced motion support\n4. Any new tests needed\n\nDo not edit files."
     },
     {
       "type": "step",
       "id": "implement",
       "agent": "wf-coder",
-      "prompt": "Implement '{{feature_name}}' from this plan:\n\n{{previous.output}}\n\nFollow the steering files. Keep Lights on keyboard access and reduced motion working. Add the requirement to the spec and tick or add the task."
+      "prompt": "Implement '{{feature_name}}' following this plan:\n\n{{previous.output}}\n\nKey constraints:\n- Follow all steering files (.kiro/steering/*.md)\n- Maintain Lights on mode keyboard access (clues as focusable buttons)\n- Respect prefers-reduced-motion (disable fog, bats, flicker, shake, scare face)\n- All text through esc() before DOM insertion\n- Add the requirement to /run/media/nsoroallan/Content/Programming/dead-letter-office/.kiro/specs/dead-letter-office/requirements.md\n\nWork from /run/media/nsoroallan/Content/Programming/dead-letter-office"
     },
     {
       "type": "step",
       "id": "verify",
       "agent": "wf-coder",
-      "prompt": "Run `node tests/test.js` and `node --check app.js`. Fix any failure and report the final status in two sentences."
+      "prompt": "Verify the implementation from /run/media/nsoroallan/Content/Programming/dead-letter-office:\n\n1. Run `npm test` and fix any failures\n2. Check syntax with `node --check app.js` and `node --check engine.js`\n3. Verify Lights on mode still works\n4. Verify reduced motion preferences are respected\n\nReport final status in 2-3 sentences."
     }
   ]
 }

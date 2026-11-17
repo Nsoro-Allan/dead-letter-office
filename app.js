@@ -145,12 +145,67 @@
     };
   })();
 
+  let diff = "normal",
+    cats = {};
+  try {
+    cats = JSON.parse(localStorage.getItem("dlo-cats")) || {};
+  } catch (e) {}
+  const saveCats = () => {
+    try {
+      localStorage.setItem("dlo-cats", JSON.stringify(cats));
+    } catch (e) {}
+  };
+  // Weak-spot training: categories you miss more often get higher weight in generated letters.
+  const weakWeights = () => {
+    const w = {};
+    Object.keys(C.CATS).forEach((k) => {
+      const c = cats[k];
+      w[k] = c && c.seen >= 3 ? 1 + 3 * (1 - c.found / c.seen) : 1.5;
+    });
+    return w;
+  };
+  function skillsHtml() {
+    const rows = Object.keys(st.cat).map((k) => {
+      const c = st.cat[k], pct = Math.round((100 * c.found) / c.seen);
+      return `<li><span>${C.CATS[k]}</span><span class="meter"><i style="width:${pct}%"></i></span><b>${pct}%</b></li>`;
+    });
+    if (!rows.length) return "";
+    const worst = Object.keys(cats).filter((k) => cats[k].seen >= 3).sort((a, b) => cats[a].found / cats[a].seen - cats[b].found / cats[b].seen)[0];
+    return `<h2>Clue skills this shift</h2><ul class="skills">${rows.join("")}</ul>` + (worst ? `<p>Your weakest area overall is <b>${C.CATS[worst]}</b>. Your next shifts will serve more of these.</p>` : "");
+  }
+  function inspector() {
+    main.innerHTML = `<section class="card"><h1>Inspect a real message</h1>
+      <p>Paste a suspicious email, text or link. It is checked on this device and nothing is uploaded. Then sweep the lamp over it to reveal what looks wrong.</p>
+      <label for="msg" class="dim">Paste the message here</label>
+      <textarea id="msg" rows="7" placeholder="Paste a suspicious message"></textarea>
+      <div class="acts"><button class="btn" id="an">Reveal red flags</button><button class="ghost" id="bk">Back</button></div></section><div id="out"></div>`;
+    $("#bk").onclick = intro;
+    $("#an").onclick = () => {
+      const raw = $("#msg").value.trim();
+      if (!raw) return;
+      const res = C.analyze(raw);
+      tells = [];
+      decoys = [];
+      done = false;
+      const verdictText = { none: "No clear red flags found. That does not mean it is safe.", one: "One red flag found. Be careful.", several: "Several red flags found. Treat this as a likely scam." }[res.level];
+      $("#out").innerHTML = `<article class="paper" id="paper" aria-label="Pasted message"><i class="seal"></i><span class="chip">Your message</span><div class="body">${fmt(res.markup)}</div></article>
+        <div class="card"><h2>${verdictText}</h2><ul>${res.flags.map((f) => `<li><b>${esc(f.text)}</b>: ${esc(f.why)} <i>(${C.CATS[f.cat]})</i></li>`).join("")}</ul>
+        <p class="dim">This is a rule-based check and can miss scams. Do not click links or reply. Contact the organisation using a number or address you already trust. If you shared a password or PIN, change it and tell your bank or provider.</p></div>`;
+      const p = $("#paper");
+      ["pointermove", "pointerdown"].forEach((ev) => p.addEventListener(ev, lamp));
+      p.addEventListener("pointerleave", () => {
+        p.style.setProperty("--x", "-999px");
+        p.querySelectorAll(".lit").forEach((b) => b.classList.remove("lit"));
+      });
+    };
+  }
+
   function fmt(str) {
     return C.parse(str)
       .map((p) => {
         if (p.t === "text") return esc(p.text);
         const arr = p.t === "tell" ? tells : decoys,
-          n = arr.push({ text: p.text, why: p.why }) - 1;
+          n = arr.push({ text: p.text, why: p.why, cat: p.cat }) - 1;
         return `<button type="button" class="${p.t}" data-k="${p.t}${n}" aria-pressed="false" tabindex="${lights() ? 0 : -1}">${esc(p.text)}</button>`;
       })
       .join("");
@@ -163,19 +218,24 @@
       <p>Every scam is a ghost story. The clues are there, if you hold a light to them.</p>
       <p>Letters arrive after midnight. <b>Sweep the UV lamp</b> over each one with your mouse or finger. Tap anything that glows and feels wrong, then <b>deliver</b> the letter or <b>burn</b> it. You have three candles: every wrong verdict snuffs one, and when the last goes out the dead take the office.</p>
       <p class="dim">Best score ${best}. Shifts worked ${stats.shifts}, flawless shifts ${stats.flawless}. Turn on sound for the full haunting, or <b>Lights on</b> if the dark is hard to read.</p>
-      <button class="btn" id="go">Enter the office</button></section>`;
+      <div class="acts"><button class="btn" id="go">Enter the office</button><button class="btn" id="dc">Daily case</button></div>
+      <div class="tools"><span><label class="dim" for="df">Difficulty </label><select id="df"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></span><button class="ghost" id="ins">Inspect a real message</button></div></section>`;
+    $("#df").value = diff;
+    $("#df").onchange = (e) => (diff = e.target.value);
     $("#go").onclick = () => {
       if (snd) A.set(true);
       start();
     };
+    $("#dc").onclick = () => {
+      if (snd) A.set(true);
+      start(true);
+    };
+    $("#ins").onclick = inspector;
   }
 
-  function start() {
-    const all = C.SCENARIOS,
-      deck = shuffle([
-        ...shuffle(all.filter((s) => s.scam)).slice(0, 5),
-        ...shuffle(all.filter((s) => !s.scam)).slice(0, 3),
-      ]);
+  function start(daily) {
+    // Fresh letters every shift; the daily case uses today's date as a seed so everyone gets the same deck.
+    const deck = C.buildDeck({ seed: daily ? Math.floor(Date.now() / 864e5) : undefined, diff, weights: weakWeights() });
     st = {
       deck,
       i: 0,
@@ -188,6 +248,8 @@
       wrong: 0,
       missed: 0,
       fa: 0,
+      cat: {},
+      daily: !!daily,
     };
     round();
   }
@@ -289,6 +351,16 @@
     st.hits += r.correct ? 1 : 0;
     st.fa += fa;
     if (s.scam) st.missed += tells.length - found;
+    tells.forEach((t, n) => {
+      if (!t.cat) return;
+      const a = (st.cat[t.cat] = st.cat[t.cat] || { seen: 0, found: 0 }), g = (cats[t.cat] = cats[t.cat] || { seen: 0, found: 0 });
+      a.seen++;
+      g.seen++;
+      if (marked("tell", n)) {
+        a.found++;
+        g.found++;
+      }
+    });
     if (!r.correct) {
       st.wrong++;
       st.lives--;
@@ -351,6 +423,7 @@
     if (flawless) stats.flawless++;
     if (st.score > best) best = st.score;
     save();
+    saveCats();
     const badges = [
       flawless && "Flawless shift",
       !over && st.missed === 0 && "Eagle eyes",
@@ -362,9 +435,10 @@
     main.innerHTML = `<section class="card"><h1>${rank}</h1>
       <p>${over ? "Your candles went out" : "Shift complete"}: <b>${st.score}</b> of ${mx} points, ${st.hits} of ${st.deck.length} verdicts correct, ${st.missed} clues missed. Best so far: ${best}.</p>
       <div class="badges">${badges.map((b) => `<span class="badge">${b}</span>`).join("") || '<span class="dim">No badges this time. Sweep slower and check every address.</span>'}</div>
-      <p class="dim">Scams rely on speed and pressure. Slow down, check the sender and the link, and never share a PIN, code or password.</p>
-      <div class="acts"><button class="btn" id="go">Start another shift</button><button class="btn" id="cp">Copy my result</button></div></section>`;
-    $("#go").onclick = start;
+      ${skillsHtml()}<p class="dim">Scams rely on speed and pressure. Slow down, check the sender and the link, and never share a PIN, code or password.</p>
+      <div class="acts"><button class="btn" id="go">Start another shift</button><button class="btn" id="cp">Copy my result</button><button class="btn" id="ins">Inspect a real message</button></div></section>`;
+    $("#go").onclick = () => start();
+    $("#ins").onclick = inspector;
     $("#cp").onclick = (e) => {
       const done = () => (e.target.textContent = "Copied");
       (navigator.clipboard
